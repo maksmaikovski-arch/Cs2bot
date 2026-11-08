@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CS2 TeamFinder</title>
+    <!-- Подключаем официальный SDK Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #17212b);
+            --text-color: var(--tg-theme-text-color, #ffffff);
+            --hint-color: var(--tg-theme-hint-color, #708499);
+            --button-color: var(--tg-theme-button-color, #5288c1);
+            --button-text: var(--tg-theme-button-text-color, #ffffff);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #232e3c);
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background-color: var(--secondary-bg);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e81cff, #40c9ff);
+            margin: 0 auto 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+        }
+
+        h2 { margin: 10px 0 5px 0; }
+        p { color: var(--hint-color); margin: 5px 0; font-size: 14px; }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-value { font-weight: bold; font-size: 18px; margin-bottom: 4px; }
+        .stat-label { font-size: 12px; color: var(--hint-color); }
+
+        .btn {
+            background-color: var(--button-color);
+            color: var(--button-text);
+            border: none;
+            border-radius: 12px;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            max-width: 400px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .btn:active { opacity: 0.7; }
+        .btn-secondary {
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="avatar">🎮</div>
+        <h2 id="user-name">Загрузка...</h2>
+        <p id="user-rank">Звание: Загрузка...</p>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-value" id="user-hours">0</span>
+                <span class="stat-label">Часов</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="user-age">0</span>
+                <span class="stat-label">Лет</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="user-gender">-</span>
+                <span class="stat-label">Пол</span>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn" onclick="startSearch()">🔍 Найти тиммейтов</button>
+    <button class="btn btn-secondary" onclick="editProfile()">✏️ Редактировать профиль</button>
+
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на весь экран
+
+        // Получаем данные пользователя из Telegram
+        let user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('user-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        }
+
+        // Имитация загрузки данных из твоей базы (пока заглушка)
+        setTimeout(() => {
+            document.getElementById('user-rank').innerText = "Звание: Global Elite";
+            document.getElementById('user-hours').innerText = "2500";
+            document.getElementById('user-age').innerText = "20";
+            document.getElementById('user-gender').innerText = "👨";
+        }, 500);
+
+        // Обработка кнопок
+        function startSearch() {
+            tg.HapticFeedback.impactOccurred('medium'); // Вибрация
+            tg.showAlert("Поиск тиммейтов скоро появится! (Этап 2)");
+        }
+
+        function editProfile() {
+            tg.HapticFeedback.impactOccurred('light'); // Вибрация
+            tg.showAlert("Редактирование профиля в разработке");
+        }
+    </script>
+</body>
+</html>
