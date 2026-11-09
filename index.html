@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CS2 TeamFinder</title>
-    <!-- Подключаем официальный SDK Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -12,137 +11,166 @@
             --text-color: var(--tg-theme-text-color, #ffffff);
             --hint-color: var(--tg-theme-hint-color, #708499);
             --button-color: var(--tg-theme-button-color, #5288c1);
-            --button-text: var(--tg-theme-button-text-color, #ffffff);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #232e3c);
         }
-
         body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            margin: 0; padding: 10px;
+            background-color: var(--bg-color); color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            height: 100vh; box-sizing: border-box; overflow: hidden;
         }
-
+        .deck-container {
+            position: relative; width: 100%; max-width: 350px;
+            height: 60vh; margin-top: 10px;
+        }
         .card {
-            background-color: var(--secondary-bg);
-            border-radius: 16px;
-            padding: 20px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            text-align: center;
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 20px; background: var(--secondary-bg);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            overflow: hidden; display: flex; flex-direction: column;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform-origin: bottom center;
+            background-size: cover; background-position: center;
         }
-
-        .avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e81cff, #40c9ff);
-            margin: 0 auto 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
+        .card-content {
+            margin-top: auto; padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0));
+            color: white;
         }
-
-        h2 { margin: 10px 0 5px 0; }
-        p { color: var(--hint-color); margin: 5px 0; font-size: 14px; }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .stat-item { display: flex; flex-direction: column; }
-        .stat-value { font-weight: bold; font-size: 18px; margin-bottom: 4px; }
-        .stat-label { font-size: 12px; color: var(--hint-color); }
-
-        .btn {
-            background-color: var(--button-color);
-            color: var(--button-text);
-            border: none;
-            border-radius: 12px;
-            padding: 15px 20px;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            max-width: 400px;
-            cursor: pointer;
-            transition: opacity 0.2s;
+        .card h2 { margin: 0; font-size: 24px; }
+        .card p { margin: 5px 0; font-size: 14px; opacity: 0.9; }
+        .rank-badge {
+            display: inline-block; background: #f1c40f; color: #000;
+            padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 12px;
             margin-bottom: 10px;
         }
-
-        .btn:active { opacity: 0.7; }
-        .btn-secondary {
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
+        .buttons {
+            display: flex; justify-content: center; gap: 30px;
+            margin-top: 20px; width: 100%;
         }
+        .btn-circle {
+            width: 70px; height: 70px; border-radius: 50%;
+            border: none; font-size: 30px; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.1s;
+        }
+        .btn-circle:active { transform: scale(0.9); }
+        .btn-dislike { background: #ff4757; color: white; }
+        .btn-like { background: #2ed573; color: white; }
+        
+        /* Анимации свайпа */
+        .swipe-left { transform: translateX(-150%) rotate(-20deg) !important; opacity: 0; }
+        .swipe-right { transform: translateX(150%) rotate(20deg) !important; opacity: 0; }
+
+        /* Модалка Мэтча */
+        .match-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none;
+            justify-content: center; align-items: center; flex-direction: column;
+            z-index: 100; backdrop-filter: blur(5px);
+        }
+        .match-modal h1 { color: #2ed573; font-size: 40px; text-shadow: 0 0 20px #2ed573; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="avatar">🎮</div>
-        <h2 id="user-name">Загрузка...</h2>
-        <p id="user-rank">Звание: Загрузка...</p>
-        
-        <div class="stats">
-            <div class="stat-item">
-                <span class="stat-value" id="user-hours">0</span>
-                <span class="stat-label">Часов</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value" id="user-age">0</span>
-                <span class="stat-label">Лет</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-value" id="user-gender">-</span>
-                <span class="stat-label">Пол</span>
-            </div>
-        </div>
+
+    <div class="deck-container" id="deck"></div>
+
+    <div class="buttons">
+        <button class="btn-circle btn-dislike" onclick="swipe('left')">❌</button>
+        <button class="btn-circle btn-like" onclick="swipe('right')">❤️</button>
     </div>
 
-    <button class="btn" onclick="startSearch()">🔍 Найти тиммейтов</button>
-    <button class="btn btn-secondary" onclick="editProfile()">✏️ Редактировать профиль</button>
+    <div class="match-modal" id="matchModal">
+        <h1>МЭТЧ! 🎉</h1>
+        <p>Вы оба хотите играть вместе!</p>
+        <button class="btn-circle btn-like" style="width:auto; padding: 0 20px; border-radius: 20px;" onclick="closeMatch()">Круто!</button>
+    </div>
 
     <script>
-        // Инициализация Telegram Web App
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем на весь экран
+        tg.expand();
 
-        // Получаем данные пользователя из Telegram
-        let user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('user-name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+        // Тестовые анкеты
+        const profiles = [
+            { name: "s1mple", age: 26, rank: "Global Elite", hours: "15000", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=500&q=80" },
+            { name: "NiKo", age: 27, rank: "Faceit 10", hours: "12000", img: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&w=500&q=80" },
+            { name: "m0NESY", age: 18, rank: "Supreme", hours: "8000", img: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=500&q=80" }
+        ];
+
+        let currentIndex = profiles.length - 1;
+
+        function renderCards() {
+            const deck = document.getElementById('deck');
+            deck.innerHTML = '';
+            
+            // Рендерим карты снизу вверх (чтобы верхняя была первой)
+            for (let i = currentIndex; i >= 0; i--) {
+                const profile = profiles[i];
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.id = `card-${i}`;
+                card.style.backgroundImage = `url('${profile.img}')`;
+                // Немного сдвигаем карты под верхней для эффекта стопки
+                if (i !== currentIndex) {
+                    card.style.transform = `scale(${0.95 - (currentIndex - i) * 0.05}) translateY(${(currentIndex - i) * 10}px)`;
+                    card.style.zIndex = i;
+                } else {
+                    card.style.zIndex = 100;
+                }
+                
+                card.innerHTML = `
+                    <div class="card-content">
+                        <span class="rank-badge">${profile.rank}</span>
+                        <h2>${profile.name}, ${profile.age}</h2>
+                        <p>⏱ Часы: ${profile.hours}</p>
+                    </div>
+                `;
+                deck.appendChild(card);
+            }
         }
 
-        // Имитация загрузки данных из твоей базы (пока заглушка)
-        setTimeout(() => {
-            document.getElementById('user-rank').innerText = "Звание: Global Elite";
-            document.getElementById('user-hours').innerText = "2500";
-            document.getElementById('user-age').innerText = "20";
-            document.getElementById('user-gender').innerText = "👨";
-        }, 500);
+        function swipe(direction) {
+            if (currentIndex < 0) return;
 
-        // Обработка кнопок
-        function startSearch() {
-            tg.HapticFeedback.impactOccurred('medium'); // Вибрация
-            tg.showAlert("Поиск тиммейтов скоро появится! (Этап 2)");
+            const card = document.getElementById(`card-${currentIndex}`);
+            
+            // Вибрация
+            tg.HapticFeedback.impactOccurred(direction === 'right' ? 'medium' : 'light');
+
+            if (direction === 'left') {
+                card.classList.add('swipe-left');
+            } else {
+                card.classList.add('swipe-right');
+            }
+
+            currentIndex--;
+
+            setTimeout(() => {
+                renderCards();
+                // 50% шанс мэтча при лайке (для теста)
+                if (direction === 'right' && Math.random() > 0.5) {
+                    showMatch();
+                }
+            }, 300);
         }
 
-        function editProfile() {
-            tg.HapticFeedback.impactOccurred('light'); // Вибрация
-            tg.showAlert("Редактирование профиля в разработке");
+        function showMatch() {
+            document.getElementById('matchModal').style.display = 'flex';
+            tg.HapticFeedback.notificationOccurred('success');
         }
+
+        function closeMatch() {
+            document.getElementById('matchModal').style.display = 'none';
+            if (currentIndex < 0) {
+                tg.showAlert("Анкеты закончились! Жди новых игроков.");
+                tg.close();
+            }
+        }
+
+        // Запуск
+        renderCards();
     </script>
 </body>
 </html>
